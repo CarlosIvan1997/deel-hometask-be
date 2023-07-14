@@ -32,7 +32,7 @@ const payJob = async (req) => {
   const { profile, profileType, profileTypeKey } = req;
 
   if (profileType !== PROFILE_TYPE.CLIENT) {
-    buildCustomError(403, 'Jobs can be paid only by clients');
+    buildCustomError(403, 'The jobs can be paid only by the clients');
   }
 
   const job = await Job.findOne({
@@ -51,14 +51,14 @@ const payJob = async (req) => {
   });
 
   if (!job) {
-    buildCustomError(400, 'Job does not exists or has been already paid');
+    buildCustomError(404, 'The job does not exist or has already been paid');
   }
 
   if (profile.balance < job.price) {
     buildCustomError(400, 'Not enough balance');
   }
 
-  await sequelize.transaction(async (transaction) => {
+  return await sequelize.transaction(async (transaction) => {
     profile.balance -= job.price;
 
     job.paid = true;
@@ -73,9 +73,9 @@ const payJob = async (req) => {
       ),
       job.save({ transaction }),
     ]);
-  });
 
-  return { success: true };
+    return { success: true };
+  });
 };
 
 module.exports = { getUnpaidJobs, payJob };
